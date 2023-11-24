@@ -1,14 +1,9 @@
 import { useState } from 'react'
 import PhoneBook from './components/Phonebook_form'
 
-function App() {
+function App({initial}) {
 
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '040-123456', id: 1 },
-    { name: 'Ada Lovelace', number: '39-44-5323523', id: 2 },
-    { name: 'Dan Abramov', number: '12-43-234345', id: 3 },
-    { name: 'Mary Poppendieck', number: '39-23-6423122', id: 4 }
-  ])
+  const [persons, setPersons] = useState(initial)
 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
@@ -30,7 +25,10 @@ function App() {
       if(newPerson.name === person.name){
         console.log('alert condition holds true')
         alert(`${person.name} is already added to the phonebook`)
-      } else {
+      } else if(newPerson.name === '' || newPerson.name === ' '){
+        alert(`please enter a valid name`)
+      }
+        else {
         console.log('alert condition holds false')
         setPersons(persons.concat(newPerson))
         setNewName('')
