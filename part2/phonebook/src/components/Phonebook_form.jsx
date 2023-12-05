@@ -1,5 +1,5 @@
 
-const PhoneBook = ({
+const PhoneBookForm = ({
     nameInputValue,
     nameChangeHandler,
     numberInputValue,
@@ -28,4 +28,4 @@ const PhoneBook = ({
    }
 
    
-   export default PhoneBook
+   export default PhoneBookForm

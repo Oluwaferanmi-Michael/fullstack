@@ -1,40 +1,101 @@
-import { useState } from 'react'
-import PhoneBook from './components/Phonebook_form'
+import { useEffect, useState } from 'react'
+import phonebookService from './services/phonebookService'
+import Numbers from './components/numbers_component'
+import PhoneBookForm from './components/Phonebook_form'
 
-function App({initial}) {
+function App() {
 
-  const [persons, setPersons] = useState(initial)
+  const [persons, setPersons] = useState([])
 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchValue, setNewSearchValue] = useState('')
 
+  useEffect(() => {
+    console.log('effect')
+
+    phonebookService.getAll()
+      .then(response =>
+        {
+          console.log(`state set`)
+          setPersons(response)
+          console.log(response)
+      }
+    )
+  }, [])
+
   // add new data event
   const addPerson = (event) => {
     event.preventDefault()
 
-    // New Created Data
-    const newPerson = {
-      name: newName,
-      number: newNumber,
-      id: persons.length + 1
+    // to prevent duplicate data
+    const person = persons.find(p => newName === p.name)
+    console.log(`person objectfrom creating contact : \t ${person}`)
+
+    const changedPerson =  {...person, number: newNumber}
+
+    if (person === undefined) {
+      createContact()
+    } else if (person.name === newName){
+      updateContact(person, person.name, changedPerson)
     }
 
-    // to prevent duplicate data
-    persons.find(person => {
-      if(newPerson.name === person.name){
-        console.log('alert condition holds true')
-        alert(`${person.name} is already added to the phonebook`)
-      } else if(newPerson.name === '' || newPerson.name === ' '){
-        alert(`please enter a valid name`)
-      }
-        else {
-        console.log('alert condition holds false')
-        setPersons(persons.concat(newPerson))
-        setNewName('')
-        setNewNumber('')
-      }})
   }
+
+  const createContact = () => {
+    console.log(`creating contact`)
+
+      // New Created Data
+      const newPerson = {
+        name: newName,
+        number: newNumber,
+      }
+
+      phonebookService.createContact(newPerson).then(
+          response => {
+            console.log('adding to phonebook...')            
+            setPersons(persons.concat(response))
+          })
+          setNewName('')
+          setNewNumber('')
+      }
+  
+
+
+  // update data if name already exists in phonebook
+  const updateContact = (person, name, updateData) => {
+    
+    if(confirm(`${person.name} is already added to the phonebook do you want to update this contact?`)){
+      console.log(`person objectfrom updating contact : \t ${person}`)
+      phonebookService.updateContact(
+        person.id,
+        updateData
+        ).then(response => {
+          setPersons(persons.map(person => person.name !== name ? person : response))
+          setNewName('')
+          setNewNumber('')
+        }).catch((err) => {console.log(`error occured: ${err}`)})
+    }
+  }
+
+  // Delete Number
+  const deletePerson = (id) => {
+    const deletedId = id;
+    const newList = persons.filter(person => 
+      person.id !== deletedId)
+      console.log(newList)
+    phonebookService.deletePerson(id).then(() => {
+      alert(`deleted person number ${id}`)
+      setPersons(newList)      
+    }).then(
+      () => phonebookService.getAll()
+    )
+      
+      // const numberIndex = persons.
+
+      // set new value to state
+    
+    }
 
   // Handle value change in input fields (creating controlled components)
   const handleChange = () => {
@@ -43,20 +104,18 @@ function App({initial}) {
   const phoneNumberChange = () => {
     setNewNumber(event.target.value)
   }
-
   const searchFunction = () => {
     setNewSearchValue(event.target.value)
   }
-
     
-  const people = persons.filter((person) => searchValue.toLowerCase() === person.name.toLowerCase())
+  const people = persons.filter((person) => searchValue === person.name)
 
   return (
     <>
     {/* <div>debug: {newName}</div> */}
 
     <Filter
-      people={people}
+      peopleFilter={people}
       searchValue={searchValue}
       searchFunction={searchFunction}
       ></Filter>
@@ -65,36 +124,30 @@ function App({initial}) {
     <br></br>
       <h2>Phonebook</h2>
 
-      <PhoneBook 
+      <PhoneBookForm 
         submitionHandler={addPerson}
         nameInputValue={newName}
         numberInputValue={newNumber}
         nameChangeHandler={handleChange}
-        numberChangeHandler={phoneNumberChange}></PhoneBook>
+        numberChangeHandler={phoneNumberChange}></PhoneBookForm>
 
       <h2>Numbers</h2>
-      <Numbers persons={persons}></Numbers>
+      <Numbers personData={persons} onDelete={(id) => deletePerson(id)}></Numbers>
       <div>
       </div>
     </>
-  )
-}
+  )}
 
 export default App
 
-const Numbers = ({persons}) => 
-  <>
-    {persons.map(person => <p key={person.id}>{person.name}, {person.number}</p>)}
-  </>
 
-
-const Filter = ({searchValue, searchFunction, people}) => {
+const Filter = ({searchValue, searchFunction, peopleFilter}) => {
   return (
     <>
       <div>
         search <input value={searchValue} onChange={searchFunction}></input>
       </div>
-      {people.map(person => <p key={person.id}>{person.name}</p>)}
+      {peopleFilter.map(person => <p key={person.id}>{person.name}</p>)}
     </>
   )
 }
