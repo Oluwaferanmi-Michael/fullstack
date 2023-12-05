@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import phonebookService from './services/phonebookService'
 import Numbers from './components/numbers_component'
 import PhoneBookForm from './components/Phonebook_form'
+import Notification from './components/Notifications'
+import ErrorNotification from './components/ErrorNotification'
 
 function App() {
 
@@ -10,6 +12,8 @@ function App() {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchValue, setNewSearchValue] = useState('')
+  const [notifyMessage, setNotifyMessage] = useState()
+  const [errorMessage, setErrorMessage] = useState()
 
   useEffect(() => {
     console.log('effect')
@@ -53,7 +57,8 @@ function App() {
 
       phonebookService.createContact(newPerson).then(
           response => {
-            console.log('adding to phonebook...')            
+            console.log('adding to phonebook...')
+            notify(`${response.name} has been added`)
             setPersons(persons.concat(response))
           })
           setNewName('')
@@ -66,15 +71,20 @@ function App() {
   const updateContact = (person, name, updateData) => {
     
     if(confirm(`${person.name} is already added to the phonebook do you want to update this contact?`)){
-      console.log(`person objectfrom updating contact : \t ${person}`)
+      console.log(`person object from updating contact : \t ${person}`)
       phonebookService.updateContact(
         person.id,
         updateData
         ).then(response => {
           setPersons(persons.map(person => person.name !== name ? person : response))
+          notify(`${person.name} has been updated`)
           setNewName('')
           setNewNumber('')
-        }).catch((err) => {console.log(`error occured: ${err}`)})
+        }).catch((err) => {
+          notifyError(`Information of ${person.name} has already been removed from the server`)
+          setNewName('')
+          setNewNumber('')
+        })
     }
   }
 
@@ -85,16 +95,11 @@ function App() {
       person.id !== deletedId)
       console.log(newList)
     phonebookService.deletePerson(id).then(() => {
-      alert(`deleted person number ${id}`)
-      setPersons(newList)      
+      notify(`deleted person number ${id}`)
+      setPersons(newList)
     }).then(
       () => phonebookService.getAll()
     )
-      
-      // const numberIndex = persons.
-
-      // set new value to state
-    
     }
 
   // Handle value change in input fields (creating controlled components)
@@ -110,6 +115,22 @@ function App() {
     
   const people = persons.filter((person) => searchValue === person.name)
 
+  // notifications function
+  const notify = (message) => {
+   setNotifyMessage(message) 
+
+   setTimeout(() => {
+    setNotifyMessage(null)
+   }, 5000);}
+
+   const notifyError = (message) => {
+    setErrorMessage(message) 
+ 
+    setTimeout(() => {
+     setErrorMessage(null)
+    }, 5000);
+  }
+
   return (
     <>
     {/* <div>debug: {newName}</div> */}
@@ -119,7 +140,9 @@ function App() {
       searchValue={searchValue}
       searchFunction={searchFunction}
       ></Filter>
-    
+
+    <Notification message={notifyMessage}></Notification>
+    <ErrorNotification message={errorMessage}></ErrorNotification>
 
     <br></br>
       <h2>Phonebook</h2>

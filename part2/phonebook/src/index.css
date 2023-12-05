@@ -1,0 +1,29 @@
+
+h1 {
+    color: green;
+    font-style: italic;
+}
+
+.notify {
+    color: green;
+    border-color: green;
+    border-style: solid;
+    border-radius: 6px;
+    background: lightgreen;
+    margin: 24px;
+    margin-bottom: 10px;
+    padding: 24px;
+    font-size: 24px;
+}
+
+.error {
+    color: red;
+    border-color: red;
+    border-style: solid;
+    border-radius: 6px;
+    background: lightcoral;
+    margin: 24px;
+    margin-bottom: 10px;
+    padding: 24px;
+    font-size: 24px;
+}
